@@ -1,13 +1,17 @@
 
 package agents;
 
+import java.util.Random;
+
 import classOntology.Energy;
 import jade.content.lang.Codec;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import ontology.SmartCityOntology;
 
@@ -20,12 +24,14 @@ public class Generator extends Agent {
 
 		configureOntology();
 
-		addBehaviour(new OneShotBehaviour() {
-
+		addBehaviour(new TickerBehaviour(this, 10 * 1000) {
 			@Override
-			public void action() {
-				sendEnergy(50); // Valor hardcode ahora mismo
-
+			protected void onTick() {
+				// Generate random Price
+				Random randomGenerator = new Random();
+				int khz = randomGenerator.nextInt(100);
+				// TODO Auto-generated method stub
+				sendEnergy(khz);
 			}
 		});
 	}

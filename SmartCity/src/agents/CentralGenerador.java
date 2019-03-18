@@ -21,7 +21,7 @@ public class CentralGenerador extends Agent {
 				if (msg != null) {
 					try {
 						Energy energiarecibida = (Energy) msg.getContentObject();
-						System.out.println("Me han enviado " + energiarecibida.getAmount() + "KhZ");
+						System.out.println("Me han enviado " + energiarecibida.getAmount() + " KhZ");
 					} catch (UnreadableException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

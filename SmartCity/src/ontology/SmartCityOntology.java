@@ -1,6 +1,5 @@
 package ontology;
 
-import classOntology.Energy;
 import jade.content.onto.*;
 import jade.content.schema.*;
 

@@ -1,7 +1,8 @@
 
 package agents;
 
-import classOntology.TransferEnergy;
+import java.util.ArrayList;
+
 import jade.content.lang.Codec;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
@@ -15,44 +16,67 @@ import ontology.SmartCityOntology;
 public class CentralGenerador extends Agent {
 	private Codec codec = new SLCodec();
 	private Ontology ontology = SmartCityOntology.getInstance();
+	private ArrayList<ACLMessage> queu = new ArrayList<ACLMessage>();
 
 	protected void setup() {
 		System.out.println("Agent: " + getLocalName() + " started.");
 
-		addBehaviour(new CyclicBehaviour() {
-
-			@Override
-			public void action() {
-				// Receive the other agent message
-				ACLMessage msg = receive();
-				if (msg != null) {
-					try {
-
-						TransferEnergy energiarecibida = (TransferEnergy) msg.getContentObject();
-						System.out.println(energiarecibida.getSender() + " Me han enviado "
-								+ energiarecibida.getAmount() + energiarecibida.getUnit());
-					} catch (UnreadableException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-
-				} else {
-					// AQUI SE DEBERÁ TRATAR SI SE APAGA O NO
-					ACLMessage msgApagar = new ACLMessage(ACLMessage.INFORM);
-					msgApagar.addReceiver(new AID("plantaTermicaSolar", AID.ISLOCALNAME));
-					msgApagar.setLanguage(codec.getName());
-					msgApagar.setOntology(ontology.getName());
-
-					try {
-						msgApagar.setContentObject("Apagate cabron");
-					} catch (Exception ex) {
-						ex.printStackTrace();
-					}
-					send(msgApagar);
-
-				}
-			}
-		});
+		addBehaviour(new ListenEnergyOrder());
+		addBehaviour(new SendEnergyOrder());
 	}
+
+	private class ListenEnergyOrder extends CyclicBehaviour {
+
+		@Override
+		public void action() {
+			ACLMessage msg = receive();
+			if (msg != null && msg.getPerformative() == ACLMessage.CFP) {
+				System.out.println("Estoy recibiendo del consumidor " + msg.getContent() + " kwh");
+				queu.add(msg);
+				System.out.println(queu.size());
+			}
+		}
+	}
+	
+	private class SendEnergyOrder extends CyclicBehaviour {
+
+		@Override
+		public void action() {
+			if(queu.size() > 0) {
+				ACLMessage msg = queu.get(0);
+				queu.remove(0);
+				AID aid = studyConditions(Float.parseFloat(msg.getContent()));
+				msg.clearAllReceiver();
+				msg.addReceiver(aid);
+				send(msg);
+			}
+		}
+	}
+	
+	private AID studyConditions (float kwh) {
+		if(kwh > 200) {
+			return new AID("plantaNuclear", AID.ISLOCALNAME);
+		} else {
+			return new AID("plantaEolica", AID.ISLOCALNAME);
+		}
+	}
+
+//	private void parseMessages(ACLMessage msg) {
+//		if (msg.getPerformative() == ACLMessage.CFP) {
+//			System.out.println("Estoy recibiendo del consumidor " + msg.getContent() + " kwh");
+//			queu.add(msg);
+//		} else {
+//			try {
+//				TransferEnergy energiarecibida = (TransferEnergy) msg.getContentObject();
+//				System.out.println(energiarecibida.getSender() + " me ha enviado " + energiarecibida.getAmount()
+//						+ energiarecibida.getUnit());
+//
+//			} catch (UnreadableException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+//
+//	}
 
 }

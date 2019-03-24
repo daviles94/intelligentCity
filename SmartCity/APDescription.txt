@@ -1,1 +1,1 @@
-( ap-description  :name "PF0UU8G1:1099/JADE" :ap-services (set ( ap-service  :name fipa.mts.mtp.http.std :type fipa.mts.mtp.http.std :addresses (sequence http://PF0UU8G1.costaisa.org:7778/acc))))
+( ap-description  :name "172.17.0.1:1099/JADE" :ap-services (set ( ap-service  :name fipa.mts.mtp.http.std :type fipa.mts.mtp.http.std :addresses (sequence http://davielabook:7778/acc))))

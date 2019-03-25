@@ -11,6 +11,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 import jade.wrapper.AgentController;
@@ -48,10 +49,19 @@ public class Consumidor extends Agent {
 				receiveMessage();
 			}
 		});
+		
+		addBehaviour(new WakerBehaviour(this, 30 * 1000) {
+		      protected void handleElapsedTimeout() {
+		    	  if(kwhstored > kwh) {
+			        kwhstored -= kwh;
+			        System.out.println("Estoy gastando energia me queda " + kwhstored);
+		    	  } 
+		      } 
+		    });
 	}
 	
 	private boolean checkUmbral() {
-		return kwhstored < kwh;
+		return kwhstored < kwh * 2;
 	}
 
 	public void configureOntology() {
@@ -60,7 +70,7 @@ public class Consumidor extends Agent {
 	}
 
 	public void control() {
-		if (stat == 1 && this.checkUmbral()) {
+		if (this.checkUmbral()) {
 			this.requestEnergy();
 		}
 	}

@@ -26,6 +26,7 @@ public class Manager extends Agent {
 		AgentController restaurante;
 		AgentController supermercado;
 		AgentController peluqueria;
+		AgentController ecocasa;
 
 		// centralAmacenador;
 		// centralGestor;
@@ -46,6 +47,7 @@ public class Manager extends Agent {
 			restaurante = cc.createNewAgent("restaurante", "agents.Consumidor", null);
 			supermercado = cc.createNewAgent("supermercado", "agents.Consumidor", null);
 			peluqueria = cc.createNewAgent("peluqueria", "agents.Consumidor", null);
+			ecocasa = cc.createNewAgent("ecocasa", "agents.Ecoconsumidor", null);
 
 			// ac = cc.createNewAgent("centralAmacenador", "agents.CentralGenerador", null);
 			// ac = cc.createNewAgent("centralGestor", "agents.CentralGenerador", null);
@@ -66,6 +68,7 @@ public class Manager extends Agent {
 			restaurante.start();
 			supermercado.start();
 			peluqueria.start();
+			ecocasa.start();
 			
 		} catch (StaleProxyException e) {
 			// TODO Auto-generated catch block

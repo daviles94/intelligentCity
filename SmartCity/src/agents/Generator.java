@@ -11,15 +11,12 @@ import classOntology.Energy;
 import jade.content.lang.Codec;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
-import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import ontology.SmartCityOntology;
 
 public class Generator extends Agent {
-	private int stat = 1; // 0:shutdown - 1:awake
 	private Codec codec = new SLCodec();
 	private Ontology ontology = SmartCityOntology.getInstance();
 
@@ -29,26 +26,6 @@ public class Generator extends Agent {
 		System.out.println("Agent: " + getLocalName() + " started.");
 
 		configureOntology();
-		
-//		DFAgentDescription dfd = new DFAgentDescription();
-//		dfd.setName(getAID());
-//		ServiceDescription sd = new ServiceDescription();
-//		sd.setType("energy-generation");
-//		sd.setName("Energy-generation-JADE");
-//		dfd.addServices(sd);
-//		try {
-//			DFService.register(this, dfd);
-//		}
-//		catch (FIPAException fe) {
-//			fe.printStackTrace();
-//		}
-
-//		addBehaviour(new TickerBehaviour(this, 10 * 1000) {
-//			@Override
-//			protected void onTick() {
-//				control();
-//			}
-//		});
 
 		addBehaviour(new CyclicBehaviour() {
 
@@ -63,13 +40,6 @@ public class Generator extends Agent {
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 	}
-
-//	public void control() {
-//		if (stat == 1) {
-//			generated = generateEnergy(getLocalName());
-//			sendEnergy(generated[0], "kwh");
-//		}
-//	}
 
 	public float[] generateEnergy(String TipoPlanta) {
 		float[] generated = new float[2];
@@ -108,31 +78,16 @@ public class Generator extends Agent {
 		return generated;
 	}
 
-//	public void sendEnergy(float energia, String unit) {
-//		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-//		msg.addReceiver(new AID("centralgenerador", AID.ISLOCALNAME));
-//		msg.setLanguage(codec.getName());
-//		msg.setOntology(ontology.getName());
-//
-//		TransferEnergy energy = new TransferEnergy();
-//		energy.setAmount(energia);
-//		energy.setUnit(unit);
-//		energy.setSender(getLocalName());
-//
-//		try {
-//			msg.setContentObject(energy);
-//		} catch (Exception ex) {
-//			ex.printStackTrace();
-//		}
-//		send(msg);
-//	}
-
 	public void receiveMessage() {
 		ACLMessage msg = receive();
 		if (msg != null) {
-			System.out.println("Estoy recibiendo un pedido de " + msg.getSender() + " de " + msg.getContent() + " y soy " + this.getLocalName());
+
+			System.out.println(
+					"#########################################################################################################################################################\n"
+							+ getLocalName() + ": " + msg.getContent() + " kwh" + " a " + msg.getSender().getLocalName()
+							+ "\n#########################################################################################################################################################\n\n\n");
+
 			ACLMessage reply = msg.createReply();
-			
 			Energy energy = new Energy();
 			energy.setAmount(generateEnergy(this.getLocalName())[0]);
 			energy.setUnit("Kwh");

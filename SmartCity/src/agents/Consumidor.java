@@ -14,11 +14,9 @@ import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
-import jade.wrapper.AgentController;
 import ontology.SmartCityOntology;
 
 public class Consumidor extends Agent {
-	private int stat = 1; // 0:shutdown - 1:awake
 	private Codec codec = new SLCodec();
 	private Ontology ontology = SmartCityOntology.getInstance();
 	private float kwh = 14;
@@ -26,11 +24,11 @@ public class Consumidor extends Agent {
 	Random randomGenerator = new Random();
 
 	protected void setup() {
-		
+
 		System.out.println("Agent: " + getLocalName() + " started.");
-		if(getLocalName().equals("casa")) {
+		if (getLocalName().equals("casa")) {
 			kwh = 150;
-		} else if(getLocalName().equals("restaurante")) {
+		} else if (getLocalName().equals("restaurante")) {
 			kwh = 1000;
 		}
 		configureOntology();
@@ -49,17 +47,20 @@ public class Consumidor extends Agent {
 				receiveMessage();
 			}
 		});
-		
+
 		addBehaviour(new WakerBehaviour(this, 30 * 1000) {
-		      protected void handleElapsedTimeout() {
-		    	  if(kwhstored > kwh) {
-			        kwhstored -= kwh;
-			        System.out.println("Estoy gastando energia me queda " + kwhstored);
-		    	  } 
-		      } 
-		    });
+			protected void handleElapsedTimeout() {
+				if (kwhstored > kwh) {
+					kwhstored -= kwh;
+					System.out.println(
+							"#########################################################################################################################################################\n"
+									+ getLocalName() + ": " + "Gastando energía. Energía restante:" + kwhstored
+									+ "\n#########################################################################################################################################################\n\n\n");
+				}
+			}
+		});
 	}
-	
+
 	private boolean checkUmbral() {
 		return kwhstored < kwh * 2;
 	}
@@ -86,6 +87,11 @@ public class Consumidor extends Agent {
 			ex.printStackTrace();
 		}
 		send(msg);
+
+		System.out.println(
+				"#########################################################################################################################################################\n"
+						+ getLocalName() + ": " + "Solicito :" + kwh + " kwh"
+						+ "\n#########################################################################################################################################################\n\n\n");
 	}
 
 	public void receiveMessage() {
@@ -94,7 +100,12 @@ public class Consumidor extends Agent {
 			Energy energiarecibida;
 			try {
 				energiarecibida = (Energy) msg.getContentObject();
-				System.out.println("Soy " + this.getLocalName() +" recibido " + energiarecibida.getAmount() + " de " + msg.getSender().getLocalName());
+				System.out.println(
+						"#########################################################################################################################################################\n"
+								+ getLocalName() + ": " + "He recibido " + energiarecibida.getAmount() + " kwh de "
+								+ msg.getSender().getLocalName()
+								+ "\n#########################################################################################################################################################\n\n\n");
+
 				kwhstored += energiarecibida.getAmount();
 			} catch (UnreadableException e) {
 				// TODO Auto-generated catch block

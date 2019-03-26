@@ -9,10 +9,7 @@ import jade.wrapper.StaleProxyException;
 public class Manager extends Agent {
 
 	protected void setup() {
-		// System.out.println("Agente: " + getLocalName());
-
 		AgentsCreation();
-
 	}
 
 	public void AgentsCreation() {
@@ -22,12 +19,14 @@ public class Manager extends Agent {
 		AgentController plantaTermicaSolar;
 		AgentController plantaGeotermica;
 		AgentController plantaHidroelectrica;
+
 		AgentController centralGenerador;
-		AgentController consumidor;
-		AgentController consumidor1;
-		AgentController consumidor2;
-		AgentController consumidor3;
-		AgentController consumidor4;
+
+		AgentController casa;
+		AgentController restaurante;
+		AgentController supermercado;
+		AgentController peluqueria;
+
 		// centralAmacenador;
 		// centralGestor;
 		// cosumidor;
@@ -42,11 +41,12 @@ public class Manager extends Agent {
 			plantaHidroelectrica = cc.createNewAgent("plantaHidroelectrica", "agents.Generator", null);
 
 			centralGenerador = cc.createNewAgent("centralGenerador", "agents.CentralGenerador", null);
-			consumidor = cc.createNewAgent("consumidor", "agents.Consumidor", null);
-			consumidor1 = cc.createNewAgent("consumidor1", "agents.Consumidor", null);
-			consumidor2 = cc.createNewAgent("consumidor2", "agents.Consumidor", null);
-			consumidor3 = cc.createNewAgent("consumidor3", "agents.Consumidor", null);
-			consumidor4 = cc.createNewAgent("consumidor4", "agents.Consumidor", null);
+
+			casa = cc.createNewAgent("casa", "agents.Consumidor", null);
+			restaurante = cc.createNewAgent("restaurante", "agents.Consumidor", null);
+			supermercado = cc.createNewAgent("supermercado", "agents.Consumidor", null);
+			peluqueria = cc.createNewAgent("peluqueria", "agents.Consumidor", null);
+
 			// ac = cc.createNewAgent("centralAmacenador", "agents.CentralGenerador", null);
 			// ac = cc.createNewAgent("centralGestor", "agents.CentralGenerador", null);
 			// ac = cc.createNewAgent("cosumidor", "agents.CentralGenerador", null);
@@ -59,13 +59,14 @@ public class Manager extends Agent {
 //			plantaTermicaSolar.start();
 //			plantaGeotermica.start();
 //			plantaHidroelectrica.start();
-			centralGenerador.start();
-			consumidor.start();
-			consumidor1.start();
-			consumidor2.start();
-			consumidor3.start();
-			consumidor4.start();
 
+			centralGenerador.start();
+
+			casa.start();
+			restaurante.start();
+			supermercado.start();
+			peluqueria.start();
+			
 		} catch (StaleProxyException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

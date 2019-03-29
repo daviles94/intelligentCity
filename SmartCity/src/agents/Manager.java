@@ -64,11 +64,11 @@ public class Manager extends Agent {
 
 			centralGenerador.start();
 
-			casa.start();
-			restaurante.start();
-			supermercado.start();
-			peluqueria.start();
-			ecocasa.start();
+//			casa.start();
+//			restaurante.start();
+//			supermercado.start();
+//			peluqueria.start();
+//			ecocasa.start();
 			
 		} catch (StaleProxyException e) {
 			// TODO Auto-generated catch block

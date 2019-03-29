@@ -48,13 +48,13 @@ public class Consumidor extends Agent {
 			}
 		});
 
-		addBehaviour(new WakerBehaviour(this, 30 * 1000) {
+		addBehaviour(new WakerBehaviour(this, 60 * 1000) {
 			protected void handleElapsedTimeout() {
 				if (kwhstored > kwh) {
 					kwhstored -= kwh;
 					System.out.println(
 							"#########################################################################################################################################################\n"
-									+ getLocalName() + ": " + "Gastando energía. Energía restante:" + kwhstored
+									+ getLocalName() + ": " + "Gastando energï¿½a. Energï¿½a restante:" + kwhstored
 									+ "\n#########################################################################################################################################################\n\n\n");
 				}
 			}

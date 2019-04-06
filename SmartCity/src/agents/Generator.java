@@ -12,9 +12,12 @@ import classOntology.Energy;
 import jade.content.lang.Codec;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
+import classOntology.GeneratorInfo;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import ontology.SmartCityOntology;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -31,9 +34,7 @@ public class Generator extends Agent {
 	protected void setup() {
 		System.out.println("Agent: " + getLocalName() + " started.");
 		settingConditions(getLocalName());	
-		getAID().addUserDefinedSlot("kwh", Float.toString(kwh));
-		getAID().addUserDefinedSlot("pollution", Float.toString(pollution));
-		System.out.println(getAID());
+
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
@@ -48,43 +49,39 @@ public class Generator extends Agent {
 		}
 
 		configureOntology();
+		
+		addBehaviour(new ResponsePollutionInform());
 
-		addBehaviour(new CyclicBehaviour() {
-
-			@Override
-			public void action() {
-				receiveMessage();
-			}
-		});
+		addBehaviour(new ResponseEnergy());
 	}
 	
 	private void settingConditions(String TipoPlanta) {
 		
 		if (TipoPlanta.equals("plantaEolica")) {
-			kwh = 60;
+			kwh = 260;
 			pollution = 10;
 			weather = true;
 		}
 
 		if (TipoPlanta.equals("plantaNuclear")) {
-			kwh = 200;
-			pollution = 120;
+			kwh = 2000;
+			pollution = 420;
 		}
 
 		if (TipoPlanta.equals("plantaTermicaSolar")) {
-			kwh = 80;
-			pollution = 20;
+			kwh = 300;
+			pollution = 330;
 			weather = true;
 		}
 
 		if (TipoPlanta.equals("plantaGeotermica")) {
-			kwh = 100;
-			pollution = 50;
+			kwh = 700;
+			pollution = 300;
 		}
 
 		if (TipoPlanta.equals("plantaHidroelectrica")) {
-			kwh = 60;
-			pollution = 30;
+			kwh = 600;
+			pollution = 100;
 		}
 	}
 	
@@ -101,37 +98,72 @@ public class Generator extends Agent {
 		getContentManager().registerOntology(ontology);
 	}
 
-	public float[] generateEnergy(String TipoPlanta) {
-		float[] generated = new float[2];
-		generated[0] = kwh;
-		generated[1] = pollution;
+	public float generateEnergy() {
+		return kwh;
+	}
+	
+	private class ResponseEnergy extends CyclicBehaviour {
 
-		return generated;
+		@Override
+		public void action() {
+			receiveMessage();
+		}
+		
+		private void receiveMessage() {
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) {
+
+				System.out.println(
+						"#########################################################################################################################################################\n"
+								+ getLocalName() + ": " + msg.getContent() + " kwh" + " a " + msg.getSender().getLocalName()
+								+ "\n#########################################################################################################################################################\n\n\n");
+
+				ACLMessage reply = msg.createReply();
+				Energy energy = new Energy();
+				energy.setAmount(generateEnergy());
+				energy.setUnit("Kwh");
+
+				try {
+					reply.setContentObject(energy);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				send(reply);
+			} else {
+			}
+
+		}
 	}
 
-	public void receiveMessage() {
-		ACLMessage msg = receive();
-		if (msg != null) {
+	
+	
+	private class ResponsePollutionInform extends CyclicBehaviour {
 
-			System.out.println(
-					"#########################################################################################################################################################\n"
-							+ getLocalName() + ": " + msg.getContent() + " kwh" + " a " + msg.getSender().getLocalName()
-							+ "\n#########################################################################################################################################################\n\n\n");
+		@Override
+		public void action() {
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+			ACLMessage msg = myAgent.receive(mt);
+			
+			if (msg != null && msg.getPerformative() == ACLMessage.INFORM) {
+				ACLMessage reply = msg.createReply();
 
-			ACLMessage reply = msg.createReply();
-			Energy energy = new Energy();
-			energy.setAmount(generateEnergy(this.getLocalName())[0]);
-			energy.setUnit("Kwh");
-
-			try {
-				reply.setContentObject(energy);
-			} catch (Exception ex) {
-				ex.printStackTrace();
+				GeneratorInfo info = new GeneratorInfo();
+				info.setKwh(kwh);
+				info.setPollution(pollution);
+				info.setName(getLocalName());
+				
+				try {
+					reply.setPerformative(ACLMessage.INFORM);
+					reply.setContentObject(info);
+				} catch(Exception e) {
+					System.out.println("****************\nLa cague " + myAgent.getLocalName() + "\n************************");
+					reply.setPerformative(ACLMessage.REFUSE);
+					reply.setContent("not-available");
+				}
+				myAgent.send(reply);
 			}
-			send(reply);
-		} else {
 		}
-
 	}
 
 }

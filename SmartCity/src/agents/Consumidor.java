@@ -26,14 +26,10 @@ public class Consumidor extends Agent {
 	protected void setup() {
 
 		System.out.println("Agent: " + getLocalName() + " started.");
-		if (getLocalName().equals("casa")) {
-			kwh = 150;
-		} else if (getLocalName().equals("restaurante")) {
-			kwh = 1000;
-		}
+		settingConditions(getLocalName());
 		configureOntology();
 
-		addBehaviour(new TickerBehaviour(this, randomGenerator.nextInt(100000)) {
+		addBehaviour(new TickerBehaviour(this, 60 * 1000) {
 			@Override
 			protected void onTick() {
 				control();
@@ -59,6 +55,30 @@ public class Consumidor extends Agent {
 				}
 			}
 		});
+	}
+	
+	private void settingConditions(String TipoPlanta) {
+		
+		if (TipoPlanta.equals("casa")) {
+			kwh = 100;
+			kwhstored = 80;
+		}
+
+		if (TipoPlanta.equals("restaurante")) {
+			kwh = 200;
+			kwhstored = 100;
+		}
+
+		if (TipoPlanta.equals("edificio")) {
+			kwh = 500;
+			kwhstored = 400;
+		}
+
+		if (TipoPlanta.equals("supermercado")) {
+			kwh = 1000;
+			kwhstored = 700;
+		}
+
 	}
 
 	private boolean checkUmbral() {

@@ -18,25 +18,18 @@ import ontology.SmartCityOntology;
 public class Ecoconsumidor extends Consumidor {
 	private Codec codec = new SLCodec();
 	private Ontology ontology = SmartCityOntology.getInstance();
-	private float kwh = 14;
+	private float kwh = 200;
 	private float generatekwh = 10;
-	private float kwhstored = 0;
+	private float kwhstored = 80;
 	
 	Random randomGenerator = new Random();
 
 	protected void setup() {
 
 		System.out.println("Agent: " + getLocalName() + " started.");
-		if (getLocalName().equals("casa")) {
-			kwh = 150;
-			generatekwh = 100;
-		} else if (getLocalName().equals("restaurante")) {
-			kwh = 1000;
-			generatekwh = 100;
-		}
 		configureOntology();
 
-		addBehaviour(new TickerBehaviour(this, randomGenerator.nextInt(100000)) {
+		addBehaviour(new TickerBehaviour(this, 60 * 1000) {
 			@Override
 			protected void onTick() {
 				control();

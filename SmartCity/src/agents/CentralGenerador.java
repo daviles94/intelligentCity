@@ -15,7 +15,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import ontology.SmartCityOntology;
-import classOntology.Generator;
+import classOntology.GeneratorInfo;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -25,7 +25,7 @@ public class CentralGenerador extends Agent {
 	private Codec codec = new SLCodec();
 	private Ontology ontology = SmartCityOntology.getInstance();
 	private ArrayList<ACLMessage> queu = new ArrayList<ACLMessage>();
-	private ArrayList<Generator> generators = new ArrayList<Generator>();
+	private ArrayList<GeneratorInfo> generators = new ArrayList<GeneratorInfo>();
 	private AID[] generatorsAID;
 
 	protected void setup() {
@@ -52,22 +52,56 @@ public class CentralGenerador extends Agent {
 			}
 		} );
 		
-		addBehaviour(new GetConditions());
+		addBehaviour(new RequestInfoFromAgents());
 
-		addBehaviour(new ListenEnergyOrder());
+		addBehaviour(new GetMessages());
 		addBehaviour(new SendEnergyOrder());
 	}
 	
 	
 
-	private class ListenEnergyOrder extends CyclicBehaviour {
+	private class GetMessages extends CyclicBehaviour {
+		private boolean getinfo = true;
+		private MessageTemplate mt;
+		private int repliesCnt = 0;
 
 		@Override
 		public void action() {
+			if(getinfo) {
+				getMessagesInfo();
+			} else {
+				listenEnergyOrders();
+			}
+		}
+		
+		private void listenEnergyOrders() {
 			ACLMessage msg = receive();
 			if (msg != null && msg.getPerformative() == ACLMessage.CFP) {
 				printInformationRequest(msg);
 				queu.add(msg);
+			}
+		}
+		
+		private void getMessagesInfo() {
+			mt = MessageTemplate.MatchConversationId("inform-kwh-pollution");
+			ACLMessage reply = myAgent.receive(mt);
+
+			if (reply != null) {
+				System.out.println("Recibo la informacion de " + reply.getSender().getLocalName());
+				if (reply.getPerformative() == ACLMessage.INFORM) {
+					GeneratorInfo gen;
+					try {
+						gen = (GeneratorInfo) reply.getContentObject();
+						generators.add(gen);
+					} catch (UnreadableException e) {
+						e.printStackTrace();
+					}
+					
+				}
+				repliesCnt++;
+			}
+			if(repliesCnt == generatorsAID.length) {
+				getinfo = false;
 			}
 		}
 	}
@@ -86,84 +120,50 @@ public class CentralGenerador extends Agent {
 
 		@Override
 		public void action() {
-			switch(step) {
-			case 0:			
-				if (queu.size() > 0) {
 
-				}
-				step ++;
-				break;
-			case 1:
-				if(queu.size()>0) {
-					ACLMessage msg = queu.get(0);
-					queu.remove(0);
-					AID aid = studyConditions(Float.parseFloat(msg.getContent()));
-					msg.clearAllReceiver();
-					msg.addReceiver(aid);
-					send(msg);
-				}
-				break;
+			if(queu.size()>0 && generators.size() > 0) {
+				ACLMessage msg = queu.get(0);
+				queu.remove(0);
+				AID aid = studyConditions(Float.parseFloat(msg.getContent()));
+				msg.clearAllReceiver();
+				msg.addReceiver(aid);
+				send(msg);
 			}
 		}
 	}
 
-	private AID studyConditions(float kwh) {
-		if (kwh > 200) {
-			return new AID("plantaNuclear", AID.ISLOCALNAME);
-		} else {
-			return new AID("plantaEolica", AID.ISLOCALNAME);
+	private AID studyConditions(float askedkwh) {
+		GeneratorInfo generatorinfo = generators.get(0);
+		for(int i=1;i<generators.size(); i++) {
+			GeneratorInfo generator = generators.get(i);
+			if(generator.getKwh() > askedkwh && generator.getPollution() < generatorinfo.getPollution()) {
+				generatorinfo = generator;
+			} else if (generator.getPollution() < generatorinfo.getPollution()) {
+				generatorinfo = generator;
+			}
 		}
+		return new AID(generatorinfo.getName(), AID.ISLOCALNAME);
 	}
 	
-	private class GetConditions extends Behaviour {
-		private int step = 0;
-		private MessageTemplate mt;
-		private int repliesCnt = 0;
+	private class RequestInfoFromAgents extends Behaviour {
+		private boolean done = false;
 
 		public void action() {
-			switch (step) {
-			case 0:
-				ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
-				for (int i = 0; i < generatorsAID.length; ++i) {
-					inform.addReceiver(generatorsAID[i]);
-				} 
-				inform.setConversationId("inform-kwh-pollution");
-				inform.setReplyWith("inform"+System.currentTimeMillis());
-				myAgent.send(inform);
-				mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"),
-						MessageTemplate.MatchInReplyTo(inform.getReplyWith()));
-				step = 1;
-				break;
-			case 1:
-				ACLMessage reply = myAgent.receive(mt);
-				if (reply != null) {
-					if (reply.getPerformative() == ACLMessage.INFORM) {
-						Generator gen;
-						try {
-							gen = (Generator) reply.getContentObject();
-							generators.add(gen);
-						} catch (UnreadableException e) {
-							e.printStackTrace();
-						}
-						
-					}
-					repliesCnt++;
-					if (repliesCnt == generatorsAID.length) {
-						step = 2; 
-					}
-				}
-				else {
-					block();
-				}
-				break;
-			}        
+			ACLMessage inform = new ACLMessage(ACLMessage.INFORM);
+			for (int i = 0; i < generatorsAID.length; ++i) {
+				inform.addReceiver(generatorsAID[i]);
+			} 
+			inform.setConversationId("inform-kwh-pollution");
+			inform.setReplyWith("inform"+System.currentTimeMillis());
+			inform.setInReplyTo(getLocalName());
+			myAgent.send(inform);
+			done = true;
 		}
 
+		@Override
 		public boolean done() {
-			if (step == 2 && repliesCnt == 0) {
-				System.out.println("I can't find generators");
-			}
-			return step == 2;
+			return done;
 		}
+
 	}
 }

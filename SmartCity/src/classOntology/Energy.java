@@ -22,4 +22,16 @@ public class Energy implements Concept {
 		this.amount = amount;
 	}
 
+	public Energy(float amount) {
+		super();
+		this.unit = "kwh";
+		this.amount = amount;
+	}
+
+	@Override
+	public String toString() {
+		return "Energy [" + amount + ", " + unit + "]";
+	}
+		
+
 }

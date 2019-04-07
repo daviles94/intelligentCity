@@ -102,16 +102,17 @@ public class Consumidor extends Agent {
 		msg.setLanguage(codec.getName());
 		msg.setOntology(ontology.getName());
 		try {
-			msg.setContent(Float.toString(kwh));
+			Energy energiapedida = new Energy(kwh);
+			msg.setContentObject(energiapedida);
+			System.out.println(
+					"#########################################################################################################################################################\n"
+							+ getLocalName() + ": " + "Solicito :" + kwh + " kwh"
+							+ "\n#########################################################################################################################################################\n\n\n");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		send(msg);
 
-		System.out.println(
-				"#########################################################################################################################################################\n"
-						+ getLocalName() + ": " + "Solicito :" + kwh + " kwh"
-						+ "\n#########################################################################################################################################################\n\n\n");
 	}
 
 	public void receiveMessage() {
@@ -122,18 +123,16 @@ public class Consumidor extends Agent {
 				energiarecibida = (Energy) msg.getContentObject();
 				System.out.println(
 						"#########################################################################################################################################################\n"
-								+ getLocalName() + ": " + "He recibido " + energiarecibida.getAmount() + " kwh de "
+								+ getLocalName() + ": " + "He recibido " + energiarecibida + " kwh de "
 								+ msg.getSender().getLocalName()
 								+ "\n#########################################################################################################################################################\n\n\n");
 
 				kwhstored += energiarecibida.getAmount();
-			} catch (UnreadableException e) {
-				// TODO Auto-generated catch block
+			} catch (Exception e) {
+				System.out.println(msg.getContent());
 				e.printStackTrace();
 			}
-		} else {
 		}
-
 	}
 
 }

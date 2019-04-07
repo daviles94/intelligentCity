@@ -84,16 +84,18 @@ public class Ecoconsumidor extends Consumidor {
 		msg.setLanguage(codec.getName());
 		msg.setOntology(ontology.getName());
 		try {
-			msg.setContent(Float.toString(kwh));
+			Energy energy = new Energy(kwh);
+			msg.setContentObject(energy);
+			System.out.println(
+					"#########################################################################################################################################################\n"
+							+ getLocalName() + ": " + "Solicito :" + kwh + " kwh"
+							+ "\n#########################################################################################################################################################\n\n\n");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		send(msg);
 
-		System.out.println(
-				"#########################################################################################################################################################\n"
-						+ getLocalName() + ": " + "Solicito :" + kwh + " kwh"
-						+ "\n#########################################################################################################################################################\n\n\n");
+		
 	}
 
 	public void receiveMessage() {
@@ -110,7 +112,7 @@ public class Ecoconsumidor extends Consumidor {
 
 				kwhstored += energiarecibida.getAmount();
 			} catch (UnreadableException e) {
-				// TODO Auto-generated catch block
+				System.out.println(msg.getContent());
 				e.printStackTrace();
 			}
 		} else {

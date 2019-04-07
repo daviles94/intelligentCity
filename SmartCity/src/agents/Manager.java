@@ -27,6 +27,8 @@ public class Manager extends Agent {
 		AgentController supermercado;
 		AgentController edificio;
 		AgentController ecocasa;
+		
+		AgentController almacenador;
 
 		// centralAmacenador;
 		// centralGestor;
@@ -48,6 +50,8 @@ public class Manager extends Agent {
 			supermercado = cc.createNewAgent("supermercado", "agents.Consumidor", null);
 			edificio = cc.createNewAgent("edificio", "agents.Consumidor", null);
 			ecocasa = cc.createNewAgent("ecocasa", "agents.Ecoconsumidor", null);
+			
+			almacenador = cc.createNewAgent("almacenador", "agents.Almacenador", null);
 
 			// ac = cc.createNewAgent("centralAmacenador", "agents.CentralGenerador", null);
 			// ac = cc.createNewAgent("centralGestor", "agents.CentralGenerador", null);
@@ -63,6 +67,8 @@ public class Manager extends Agent {
 			plantaHidroelectrica.start();
 
 			centralGenerador.start();
+			
+			almacenador.start();
 
 			casa.start();
 			restaurante.start();

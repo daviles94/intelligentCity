@@ -18,6 +18,7 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import ontology.SmartCityOntology;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -113,19 +114,15 @@ public class Generator extends Agent {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
-
-				System.out.println(
-						"#########################################################################################################################################################\n"
-								+ getLocalName() + ": " + msg.getContent() + " kwh" + " a " + msg.getSender().getLocalName()
-								+ "\n#########################################################################################################################################################\n\n\n");
-
 				ACLMessage reply = msg.createReply();
-				Energy energy = new Energy();
-				energy.setAmount(generateEnergy());
-				energy.setUnit("Kwh");
+				Energy energy = new Energy(generateEnergy());
 
 				try {
 					reply.setContentObject(energy);
+					System.out.println(
+							"#########################################################################################################################################################\n"
+									+ getLocalName() + ": " + energy + " kwh" + " a " + msg.getSender().getLocalName()
+									+ "\n#########################################################################################################################################################\n\n\n");
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
@@ -145,7 +142,7 @@ public class Generator extends Agent {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 			ACLMessage msg = myAgent.receive(mt);
 			
-			if (msg != null && msg.getPerformative() == ACLMessage.INFORM) {
+			if (msg != null) {
 				ACLMessage reply = msg.createReply();
 
 				GeneratorInfo info = new GeneratorInfo();
@@ -157,7 +154,7 @@ public class Generator extends Agent {
 					reply.setPerformative(ACLMessage.INFORM);
 					reply.setContentObject(info);
 				} catch(Exception e) {
-					System.out.println("****************\nLa cague " + myAgent.getLocalName() + "\n************************");
+					System.out.println("\n****************ERROR " + myAgent.getLocalName() + "\n************************");
 					reply.setPerformative(ACLMessage.REFUSE);
 					reply.setContent("not-available");
 				}

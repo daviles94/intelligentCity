@@ -15,6 +15,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import ontology.SmartCityOntology;
+import classOntology.Energy;
 import classOntology.GeneratorInfo;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -27,6 +28,7 @@ public class CentralGenerador extends Agent {
 	private ArrayList<ACLMessage> queu = new ArrayList<ACLMessage>();
 	private ArrayList<GeneratorInfo> generators = new ArrayList<GeneratorInfo>();
 	private AID[] generatorsAID;
+	private boolean sendAlmacenador = true;
 
 	protected void setup() {
 		System.out.println("Agent: " + getLocalName() + " started.");
@@ -61,22 +63,19 @@ public class CentralGenerador extends Agent {
 	
 
 	private class GetMessages extends CyclicBehaviour {
-		private boolean getinfo = true;
 		private MessageTemplate mt;
 		private int repliesCnt = 0;
 
 		@Override
 		public void action() {
-			if(getinfo) {
-				getMessagesInfo();
-			} else {
-				listenEnergyOrders();
-			}
+			getMessagesInfo();
+			listenEnergyOrders();
 		}
 		
 		private void listenEnergyOrders() {
-			ACLMessage msg = receive();
-			if (msg != null && msg.getPerformative() == ACLMessage.CFP) {
+			MessageTemplate mtmp = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+			ACLMessage msg = myAgent.receive(mtmp);
+			if (msg != null) {
 				printInformationRequest(msg);
 				queu.add(msg);
 			}
@@ -88,48 +87,89 @@ public class CentralGenerador extends Agent {
 
 			if (reply != null) {
 				System.out.println("Recibo la informacion de " + reply.getSender().getLocalName());
-				if (reply.getPerformative() == ACLMessage.INFORM) {
+				try {
 					GeneratorInfo gen;
-					try {
-						gen = (GeneratorInfo) reply.getContentObject();
-						generators.add(gen);
-					} catch (UnreadableException e) {
-						e.printStackTrace();
-					}
-					
+					gen = (GeneratorInfo) reply.getContentObject();
+					generators.add(gen);
+					repliesCnt++;
+					System.out.println(generators);
+				} catch (UnreadableException e) {
+					e.printStackTrace();
 				}
-				repliesCnt++;
+				
 			}
-			if(repliesCnt == generatorsAID.length) {
-				getinfo = false;
+			mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+			ACLMessage inform = myAgent.receive(mt);
+			
+			if(inform != null && inform.getSender().getLocalName().equals("almacenador")) {
+				sendAlmacenador = true;
 			}
+			
 		}
 	}
 	
 	private void printInformationRequest( ACLMessage msg) {
-		System.out.println(
-				"#########################################################################################################################################################\n"
-						+ getLocalName() + ": " + "El consumidor " + msg.getSender().getLocalName()
-						+ " necesita " + msg.getContent() + " kwh"
-						+ "\n#########################################################################################################################################################\n\n\n");
+		try {
+			System.out.println(
+					"#########################################################################################################################################################\n"
+							+ getLocalName() + ": " + "El consumidor " + msg.getSender().getLocalName()
+							+ " necesita " + msg.getContentObject() + " kwh"
+							+ "\n#########################################################################################################################################################\n\n\n");
+		} catch (UnreadableException e) {
+			e.printStackTrace();
+		}
 
 	}
 
 	private class SendEnergyOrder extends CyclicBehaviour {
-		private int step = 0;
-
 		@Override
 		public void action() {
-
-			if(queu.size()>0 && generators.size() > 0) {
-				ACLMessage msg = queu.get(0);
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REJECT_PROPOSAL);
+			ACLMessage msg = myAgent.receive(mt);
+			if(msg != null && msg.getSender().getLocalName().equals("almacenador")) {
+				System.out.println(getLocalName() + " El almacenador no ha podido enviar la peticion");
+				sendAlmacenador = false;
+			}
+			if(queu.size()>0) {
+				ACLMessage msgqueu = queu.get(0);
 				queu.remove(0);
-				AID aid = studyConditions(Float.parseFloat(msg.getContent()));
+				if(msgqueu.getSender().getLocalName().equals("almacenador")) {
+					sendRequestToGenerators(msgqueu);
+					sendAlmacenador = false;
+				}
+				else {
+					if(sendAlmacenador) {
+						System.out.println("\n#######################\n"+getLocalName() + " envio la peticion al almacen\n###############");
+						AID almacenador = new AID("almacenador", AID.ISLOCALNAME);
+						msgqueu.clearAllReceiver();
+						msgqueu.addReceiver(almacenador);
+						send(msgqueu);
+					} else if(generators.size() > 0){
+						System.out.println("\n#######################\n"+getLocalName() + " envio la peticion a los generadores\n###############");
+						sendRequestToGenerators(msgqueu);
+					} else {
+						System.out.println("ERROR");
+					}
+				}			
+			}
+
+		}
+		
+		private void sendRequestToGenerators(ACLMessage msg) {
+			Energy energy;
+			try {
+				energy = (Energy) msg.getContentObject();
+				AID aid = studyConditions(energy.getAmount());
+				System.out.println("\n==================\n"+getLocalName() + " le envio la peticion a "+ aid.getLocalName() + "\n==================");
 				msg.clearAllReceiver();
 				msg.addReceiver(aid);
 				send(msg);
+			} catch (UnreadableException e) {
+				e.printStackTrace();
 			}
+
 		}
+		
 	}
 
 	private AID studyConditions(float askedkwh) {
